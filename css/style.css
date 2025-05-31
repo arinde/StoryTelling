@@ -4,6 +4,9 @@ body{
     padding: 0;
     /* color: red; */
 }
+html{
+    scroll-behavior: smooth;
+}
 .gap-x{
     padding: 0 70px;
 }
@@ -83,11 +86,14 @@ body{
     text-decoration: none;
     background-color: #090b4c;
     color: white;
-    padding: 10px 20px;
+    padding: 10px 10px;
     padding-bottom: 14px;
     border-radius: 10px;
     font-weight: bold;
     z-index: 1;
+    border: 0 solid;
+    width: 100%;
+    font-size: 16px;
 }
 .block-2-p{
     margin-top: 36px;
@@ -262,6 +268,7 @@ text-2-1{
         width: 95%;
         padding: 20px 15px;
         padding-right: 0;
+        margin-top: 10px;
         /* display: block; */
     }
     .input-access{
@@ -270,4 +277,41 @@ text-2-1{
         margin-top: 20px;
         padding: 20px;
     }
+    .b3-h1{
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        line-height: 35px;
+    }
 }
+
+#message {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #e0e9fc;
+  color: #05640e;
+  border-left: 5px solid #33cc77;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+  display: none; /* hidden by default */
+  transition: all 0.s ease-in-out;
+}
+
+#message.show {
+  display: block;
+  animation: popIn 0.4s ease-out;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
