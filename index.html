@@ -42,6 +42,10 @@
                             <button type="submit" class="input-access">Get early access</button>
                         </form>
                         <p id="message"></p>
+                        <div id="popupMessage" class="popup hidden">
+                            <p id="popupText"></p>
+                        </div>
+                        
                     </div>
                 </div>
                 <div class="block-2-img">
@@ -141,7 +145,7 @@
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+    import { getDatabase, ref, push, get } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
     // TODO: Add SDKs for Firebase products that you want to use
     // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -166,46 +170,77 @@
         const message =document.getElementById("message");
         const nameInput = document.getElementById("nameInput");
 
+        function showPopup(message, success = true) {
+            const popup = document.getElementById("popupMessage");
+            const popupText = document.getElementById("popupText");
+
+            popupText.textContent = message;
+            popup.style.backgroundColor = success ? "#28a745" : "#dc3545"; // green or red
+
+            popup.classList.remove("hidden");
+            popup.classList.add("show");
+
+            setTimeout(() => {
+                popup.classList.remove("show");
+                popup.classList.add("hidden");
+            }, 3000);
+        }
+
         form.addEventListener("submit", (e) => {
             e.preventDefault();
-            const email = emailInput.value;
+            const email = emailInput.value.trim();
             const name = nameInput.value;
 
             if (!email || !name) {
-                message.textContent = "❗Please enter both name and email.";
-                message.classList.add("show");
+                showPopup( "❌Please enter both name and email.", false);
                 return;
             }
+            const emailsRef = ref(db, "emails");
 
-            push(ref(db, "emails"), {
-                name: name,
-                email: email,
-                timeStamp: Date.now()
-            }).then(() => {
-                emailjs.send("service_g9ig6xj", "template_owm6usp", {
-                name: name,
-                email: email,
-            }, "2cHjbpRsfGi-TXfqT")
-            .then(() => {
-                message.textContent = "✅Thank you for your interest! We will notify you when we launch.";
-                message.classList.add("show");
-                nameInput.value = "";
-                emailInput.value = "";
-            }).catch((error) => {
-                console.error("Error saving email:", error);
-                message.textContent = "❌There was an error saving your email. Please try again later.";
-                message.classList.add("error");
-            });
+            get(emailsRef).then((snapshot) => {
+            let emailExists = false;
 
-    
-           emailInput.value = "";
-            }).catch((error) => {
-            console.error("Email send error:", error);
-            message.textContent = "❌There was an error sending your emaillll. Please try again later.";
-            });
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    if (data.email === email) {
+                        emailExists = true;
+                    }
+                });
+            }
 
+            if (emailExists) {
+                showPopup("❌ This email is already subscribed.", false);
+            } else {
+                // Save email if not already present
+                    push(emailsRef,{
+                        name: name,
+                        email: email,
+                        timeStamp: Date.now()
+                    }).then(() => {
+                        emailjs.send("service_g9ig6xj", "template_owm6usp", {
+                        name: name,
+                        email: email,
+                    }, "2cHjbpRsfGi-TXfqT")
+                    .then(() => {
+                        showPopup("✅ Thank you for waitlisting!");
+                        emailInput.value = "";
+                    }).catch((error) => {
+                        console.error("EmailJS error:", error);
+                        showPopup("❌ Email not sent. Try again.", false);
+                    });
+                        }).catch((error) => {
+                            console.error("Firebase error:", error);
+                            showPopup("❌ Failed to save your email.", false);
+                        });
+                    }
+                    }).catch((error) => {
+                        console.error("Read error:", error);
+                        showPopup("❌ Could not check email. Try again.", false);
+                    });
+                });
             
-        });
+
     </script>
 </body>
 </html>
